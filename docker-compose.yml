@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  backend:
+    container_name: backend-docker
+    build: ./back-end
+    ports:
+      - '8000:8000'
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db/work_db
+    command: bash -c "uvicorn main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+      container_name: frontend-docker
+      build: ./front-end
+      ports:
+      - '3000:3000'
+      command: "npm start"
+      depends_on:
+        - backend
+
+  db:
+      container_name: db-docker
+      build: ./db
+      volumes:
+        - /docker-entrypoint-initdb.d
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
+      
