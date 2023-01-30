@@ -15,7 +15,7 @@ function Tabs() {
   };
 
   //выбранный документ
-  const [selected, setSelected] = useState({id: 0, name: "Выбирите документ", text: ""})
+  const [selected, setSelected] = useState({id: 0, name: "Выберите документ", text: ""})
 
   //результат извлечения данных
   const [result, setResult] = useState([]);
