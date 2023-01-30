@@ -26,7 +26,8 @@ function Tabs() {
   const [responseData, setResponseData] = useState([ ]);
 
   //название текущей онтологии
-  const [name, setName] = useState(localStorage.getItem("user_ont_name") || "не выбрана онтология");
+  const [name, setName] = useState(localStorage.getItem("user_ont_name") || "онтология не выбрана");
+  
 
   async function handleAskQuestion(e) {
     const quest = questionRef.current.value
@@ -69,9 +70,11 @@ function Tabs() {
       console.log(res);
       setSelected({id: 0, name: "Выбирите документ", text: ""})
       setResult([])
-      localStorage.removeItem("user_ont")
+      questionRef.current.value = ""
+      setResponseData([])
       localStorage.removeItem("user_ont_name")
       setName("онтология не выбрана")
+      localStorage.removeItem("user_ont")
     }
     catch(e){
         console.log(e);
