@@ -8,7 +8,7 @@ export default function DataTable({selectedFileId}) {
     useEffect(() => {
         async function loadData () {
             try{
-                let url = 'http://localhost:8000/api/v1/magic/maintable/' + selectedFileId;
+                let url = 'http://77.222.42.117:8000/api/v1/magic/maintable/' + selectedFileId;
                 let res =  await axios(url, {
                     method: 'GET',
                     mode: 'no-cors',

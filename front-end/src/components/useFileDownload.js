@@ -4,7 +4,7 @@ export default function useFileDownload() {
     const message = async () => {
         if (localStorage.getItem("user_ont") === null) return [];
         try{
-            let url = 'http://localhost:8000/api/v1/magic/textdocs/' + localStorage.getItem("user_ont");
+            let url = 'http://77.222.42.117:8000/api/v1/magic/textdocs/' + localStorage.getItem("user_ont");
             let res =  await axios(url, {
                 method: 'GET',
                 mode: 'no-cors',

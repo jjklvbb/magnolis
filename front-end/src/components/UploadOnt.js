@@ -17,7 +17,7 @@ export const UploadOnt = ({setResult, setSelected, name, setName, deleteOnt}) =>
         console.log(file);
         event.preventDefault()
         try{
-            let url = 'http://localhost:8000/api/v1/magic/uploadont';
+            let url = 'http://77.222.42.117:8000/api/v1/magic/uploadont';
             const formData = new FormData();
             formData.append('file', file);
             formData.append('fileName', file.name);

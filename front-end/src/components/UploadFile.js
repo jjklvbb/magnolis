@@ -18,7 +18,7 @@ export const UploadFile = ({setResult, setSelected}) =>{
         event.preventDefault()
         {(Array.from(files)).map(async file => {
             try{
-                let url = 'http://localhost:8000/api/v1/magic/uploaddoc/' + localStorage.getItem("user_ont");
+                let url = 'http://77.222.42.117:8000/api/v1/magic/uploaddoc/' + localStorage.getItem("user_ont");
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('fileName', file.name);
@@ -46,7 +46,7 @@ export const UploadFile = ({setResult, setSelected}) =>{
     async function deleteDocs(e){
         if (localStorage.getItem("user_ont") === null) return
         try{
-          let url = 'http://localhost:8000/api/v1/magic/deletedocs/' + localStorage.getItem("user_ont");
+          let url = 'http://77.222.42.117:8000/api/v1/magic/deletedocs/' + localStorage.getItem("user_ont");
           let res =  await axios(url, {
               method: 'DELETE',
               mode: 'no-cors',

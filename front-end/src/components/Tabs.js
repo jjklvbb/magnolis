@@ -34,7 +34,7 @@ function Tabs() {
     if (quest === '') return
     console.log(quest)
     try{
-      let url = 'http://localhost:8000/api/v1/magic/maintable/' + localStorage.getItem("user_ont") + '/' + quest;
+      let url = 'http://77.222.42.117:8000/api/v1/magic/maintable/' + localStorage.getItem("user_ont") + '/' + quest;
       let res =  await axios(url, {
           method: 'GET',
           mode: 'no-cors',
@@ -56,7 +56,7 @@ function Tabs() {
   async function deleteOnt(e){
     if (localStorage.getItem("user_ont") === null) return
     try{
-      let url = 'http://localhost:8000/api/v1/magic/deleteont/' + localStorage.getItem("user_ont");
+      let url = 'http://77.222.42.117:8000/api/v1/magic/deleteont/' + localStorage.getItem("user_ont");
       let res =  await axios(url, {
           method: 'DELETE',
           mode: 'no-cors',
