@@ -2,15 +2,6 @@ import React from 'react'
 
 export default function ResponseDataTable({responseData}) {
 
-    /*const responseData = [
-        {
-          doc: "анкета1.docx",
-          attr: "Уровень образования",
-          value: "Высшее",
-          entity_name: "Красильникова Диана Анатольевна"
-        }
-    ]*/
-
     return (
         <table>
         <thead>

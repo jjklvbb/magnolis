@@ -7,7 +7,7 @@ export default function Message() {
 
     const message = async () => {
         try{
-            let url = 'http://77.222.42.117:8000/api/v1/magic/gethello';
+            let url = 'http://127.0.0.1:8000/api/v1/magic/gethello';
             let res =  await axios(url, {
                 method: 'GET',
                 mode: 'no-cors',

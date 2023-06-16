@@ -5,7 +5,7 @@ from starlette.requests import Request
 
 
 def create_db_engine():
-    return create_engine("postgresql://postgres:postgres@db/work_db", echo=True)
+    return create_engine("postgresql://postgres:1@localhost:5432/work_db", echo=True)
 
 
 def create_session_factory(engine):

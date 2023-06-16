@@ -17,7 +17,7 @@ export const UploadOnt = ({setResult, setSelected, name, setName, deleteOnt}) =>
         console.log(file);
         event.preventDefault()
         try{
-            let url = 'http://77.222.42.117:8000/api/v1/magic/uploadont';
+            let url = 'http://127.0.0.1:8000/api/v1/magic/uploadont';
             const formData = new FormData();
             formData.append('file', file);
             formData.append('fileName', file.name);
@@ -31,6 +31,8 @@ export const UploadOnt = ({setResult, setSelected, name, setName, deleteOnt}) =>
                     'Access-Control-Allow-Origin': '*' },
               })
                 .then(async function (response) {
+                    console.log(response.status);
+                    if (response.status === 200){
                     let id = response.data['id']
                     localStorage.setItem("user_ont", id.toString())
                     localStorage.setItem("user_ont_name", file.name)
@@ -38,11 +40,13 @@ export const UploadOnt = ({setResult, setSelected, name, setName, deleteOnt}) =>
                     console.log(response);
                     setSelected({id: 0, name: "Выбирите документ", text: ""})
                     setResult(await message());
-
                     setName(file !== null ? file.name : "");
+                    }
                 })
                 .catch(function (response) {
-                  console.log(response);
+                    console.log("ошибочка");
+                    alert("Ошибка в загрузке онтологии, проверьте наличие мета атрибутов #Имя сущности и #Дата");
+                    console.log(response);
                 });
         }
         catch(e){

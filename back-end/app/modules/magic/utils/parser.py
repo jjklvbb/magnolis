@@ -42,11 +42,19 @@ def TextParsing(doc_id, text, attributes):
 
 def FindMetaAttr(json_data):
     global id_meta_date, id_meta_name, id_entity_date, id_entity_name, entity_name, entity_data
+
+    id_meta_date = -123456
+    id_meta_name = -123456
+    id_entity_date = -123456
+    id_entity_name = -123456
     for x in json_data['nodes']:
         if x['name'] == '#Дата':
             id_meta_date = x['id']
         if x['name'] == '#Имя сущности':
             id_meta_name = x['id']
+
+    if id_meta_date == -123456 or id_meta_name == -123456:
+        return ["500", "", ""]
 
     for x in json_data['relations']:
         if x['source_node_id'] == id_meta_date:
@@ -54,10 +62,13 @@ def FindMetaAttr(json_data):
         if x['source_node_id'] == id_meta_name:
             id_entity_name = x['destination_node_id']
 
+    if id_entity_date == -123456 or id_entity_name == -123456:
+        return ["500", "", ""]
+
     for x in json_data['nodes']:
         if x['id'] == id_entity_date:
             entity_data = x['name']
         if x['id'] == id_entity_name:
             entity_name = x['name']
 
-    return [entity_name, entity_data]
+    return ["200", entity_name, entity_data]

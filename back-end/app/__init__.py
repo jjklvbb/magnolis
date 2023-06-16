@@ -14,7 +14,7 @@ def create_app():
     origins = [
         "http://172.26.112.1:3000",
         "http://localhost:3000",
-        "http://77.222.42.117:3000"
+        "http://77.222.42.117:3000/"
     ]
 
     app.add_middleware(
