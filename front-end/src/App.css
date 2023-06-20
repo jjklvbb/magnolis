@@ -290,3 +290,86 @@ th {
   border: none;
   outline: none;
 }
+
+.auth-container {
+  text-align: center;
+  padding-top: 15%;
+}
+
+.auth-input, .auth-button{
+  padding: 10px;
+  margin: 10px;
+  box-shadow: 3px 3px 10px 6px #e7d5f9;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.ont-dropdown{
+  width: 300px;
+  padding: 10px;
+  user-select: none;
+  position: relative;
+  background: #fff;
+  color: #333;
+  z-index: 100;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 90%;
+}
+
+.ont-dropdown-btn{
+  position:relative;
+  padding: 15px;
+  background: #fff;
+  box-shadow: 3px 3px 10px 6px #e7d5f9;
+  color: #333;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.ont-dropdown-content{
+  position: relative;
+  left: 0;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 3px 3px 10px 6px #e7d5f9;
+  color: #333;
+  width: 100%;
+  z-index: 100;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ont-dropdown-item{
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 100;
+}
+
+.ont-dropdown .ont-dropdown-content .ont-dropdown-item:hover {
+  background: #f4f4f4;
+}
+
+.ont-upload-file-submit{
+  width: auto;
+  height: 40px;
+  padding: 10px;
+  margin: 5px 0px 15px 20px;
+  box-shadow: 3px 3px 10px 6px #e7d5f9;
+  align-items: center;
+  justify-content: space-between;
+  background:rgba(255, 255, 255, 0.966);
+}
+
+.out-button{
+  padding: 10px;
+  margin: 20px;
+  margin-top: 10px;
+  box-shadow: 3px 3px 10px 6px #e7d5f9;
+  align-items: center;
+  justify-content: space-between;
+  background:rgba(255, 255, 255, 0.966);
+}

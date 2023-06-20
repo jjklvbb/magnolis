@@ -15,9 +15,12 @@ function Tabs() {
   };
 
   //выбранный документ
-  const [selected, setSelected] = useState({ id: 0, name: "Выбирите документ", text: "" })
+  const [selected, setSelected] = useState({ id: 0, name: "Выберите документ", text: "" })
 
-  //результат извлечения данных
+  //Выбранная онтология
+  const [selectedOnt, setSelectedOnt] = useState({ id: 0, name: "Выбрать онтологию" })
+
+  //
   const [result, setResult] = useState([]);
 
   const questionRef = useRef()
@@ -51,7 +54,7 @@ function Tabs() {
       console.log(res.data.length)
       if (res.data.length > 0)
         AnswerTextRef.current.value = "ДА"
-      else 
+      else
         AnswerTextRef.current.value = "НЕТ"
     }
     catch (e) {
@@ -62,8 +65,8 @@ function Tabs() {
   async function deleteOnt(e) {
     if (localStorage.getItem("user_ont") === null) return
     try {
-      let url = 'http://127.0.0.1:8000/api/v1/magic/deleteont/' + localStorage.getItem("user_ont");
-      let res = await axios(url, {
+      let url = 'http://127.0.0.1:8000/api/v1/magic/deletedatauser/';
+      await axios(url, {
         method: 'DELETE',
         mode: 'no-cors',
         headers: {
@@ -72,15 +75,25 @@ function Tabs() {
         },
         withCredentials: true,
         credentials: 'same-origin',
+        params: {
+          user_id: localStorage.getItem("user_id"),
+      }
       })
-      console.log(res);
-      setSelected({ id: 0, name: "Выбирите документ", text: "" })
-      setResult([])
-      questionRef.current.value = ""
-      setResponseData([])
-      localStorage.removeItem("user_ont_name")
-      setName("онтология не выбрана")
-      localStorage.removeItem("user_ont")
+        .then(async function (response) {
+          console.log(response);
+          setSelected({ id: 0, name: "Выберите документ", text: "" })
+          setSelectedOnt({ id: 0, name: "Выбрать онтологию" })
+          setResult([])
+          questionRef.current.value = ""
+          setResponseData([])
+          localStorage.removeItem("user_ont_name")
+          localStorage.removeItem("user_ont")
+          setName("онтология не выбрана")
+        })
+        .catch(function (response) {
+        });
+
+
     }
     catch (e) {
       console.log(e);
@@ -91,22 +104,26 @@ function Tabs() {
   const [value, setValue] = useState('');
   const [lastValue, setLastValue] = useState(' ');
 
-  useEffect(() =>{
+  useEffect(() => {
     async function getWords(e) {
       try {
-        let url = 'http://127.0.0.1:8000/api/v1/magic/get_words/' + localStorage.getItem("user_ont");
-        let res = await axios(url, {
-          method: 'GET',
-          mode: 'no-cors',
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-          credentials: 'same-origin',
-        })
-        console.log(res);
-        setWords(res.data)
+        if (localStorage.getItem("user_ont")) {
+          let url = 'http://127.0.0.1:8000/api/v1/magic/get_words/' + localStorage.getItem("user_ont");
+          let res = await axios(url, {
+            method: 'GET',
+            mode: 'no-cors',
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+            credentials: 'same-origin',
+          })
+          if (Array.isArray(res.data)) {
+            console.log(res);
+            setWords(res.data);
+          }
+        }
       }
       catch (e) {
         console.log(e);
@@ -115,9 +132,8 @@ function Tabs() {
     getWords();
   }, [name])
 
-  const filteredWords = words.filter(word => 
-      { return word.toLowerCase().includes(lastValue.toLowerCase()); })
-    //console.log(filt.map(word => {return value + ' ' + word}));
+  const filteredWords = words.filter(word => { return word.toLowerCase().includes(lastValue.toLowerCase()); })
+  //console.log(filt.map(word => {return value + ' ' + word}));
 
 
   const [isOpen, setIsOpen] = useState(true);
@@ -174,8 +190,7 @@ function Tabs() {
         >
           <h2>MagNolis</h2>
           <hr />
-          <h2>Выберите онтологию и нажмите "Загрузить"</h2>
-          <UploadOnt setResult={setResult} setSelected={setSelected} name={name} setName={setName} deleteOnt={deleteOnt} />
+          <UploadOnt selectedOnt={selectedOnt} setSelectedOnt={setSelectedOnt} setResult={setResult} setSelected={setSelected} name={name} setName={setName} deleteOnt={deleteOnt} />
           <div>
             <img className="DBSchema" src={DBSchema} alt="да" />
           </div>
@@ -238,9 +253,9 @@ function Tabs() {
                   : null
               }
             </ul>
-          </form>  
+          </form>
           <button onClick={handleAskQuestion} className="ask-question">Задать вопрос</button>
-          <input ref={AnswerTextRef} className="answer-text" type="text" disabled/>
+          <input ref={AnswerTextRef} className="answer-text" type="text" disabled />
 
           <ResponseDataTable responseData={responseData} className="data-table" />
         </div>

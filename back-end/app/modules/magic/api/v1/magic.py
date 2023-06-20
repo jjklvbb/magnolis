@@ -6,6 +6,7 @@ import pymorphy2
 from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
+import bcrypt
 
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -18,8 +19,6 @@ from app.common.db import get_db
 
 router = APIRouter()
 
-user_id = 1
-user_ont = 6
 
 @router.get("/gethello")
 def get_hello():
@@ -35,7 +34,9 @@ def read_users(session: Session = Depends(get_db)):
     try:
         content = [
             {
+                "id": x.user_id,
                 "name": x.login,
+                "password": x.password,
             } for x in session.query(User).all()
         ]
         return JSONResponse(status_code=200, content=content)
@@ -49,18 +50,34 @@ def read_ontologies(session: Session = Depends(get_db)):
     try:
         content = [
             {
-                # "id": x.ont_id,
+                "id": x.ont_id,
                 "name": x.ont_name,
                 "attr_entity_name": x.attr_entity_name,
-                # "ont_owner": x.ont_owner,
+                "ont_owner": x.user.user_id,
                 "attr_date": x.attr_date,
-                # "user": x.user
             } for x in session.query(Ontology).all()
         ]
         return JSONResponse(status_code=200, content=content)
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=404, content="No data to return")
+        return JSONResponse(status_code=400, content="No data to return")
+
+
+@router.get("/user_ontologies")
+def read_user_ontologies(user_id: int, session: Session = Depends(get_db)):
+    try:
+        return [
+            {
+                "id": x.ont_id,
+                "name": x.ont_name,
+                "attr_entity_name": x.attr_entity_name,
+                "ont_owner": x.user.user_id,
+                "attr_date": x.attr_date,
+            } for x in session.query(Ontology).filter(Ontology.ont_owner == user_id).all()
+        ]
+    except Exception as e:
+        print(e)
+        return JSONResponse(status_code=400, content=str(e))
 
 
 @router.get("/textdocs")
@@ -84,6 +101,7 @@ def read_attributes(session: Session = Depends(get_db)):
     try:
         return [
             {
+                "id": x.attr_id,
                 "name": x.attr_name,
                 "ont": x.ont.ont_name,
             } for x in session.query(Attribute).all()
@@ -95,26 +113,29 @@ def read_attributes(session: Session = Depends(get_db)):
 
 @router.get("/get_words/{ont_id}")
 def get_words(ont_id: int, session: Session = Depends(get_db)):
-    global response
     try:
-        response = session.query(Attribute).filter(Attribute.attr_ont == ont_id).all()
+        global response
+        try:
+            response = session.query(Attribute).filter(Attribute.attr_ont == ont_id).all()
+        except Exception as e:
+            print(e)
+            return {"status": "no data to return"}
+
+        words = []
+        for x in response:
+            tokens = word_tokenize(x.attr_name, language="russian")
+            morph = pymorphy2.MorphAnalyzer()
+
+            for token in tokens:
+                if token.lower() not in words and len(token) != 1:
+                    words.append(token.lower())
+                normal_form = morph.parse(token)[0].normal_form
+                if normal_form not in words and len(normal_form) != 1:
+                    words.append(normal_form)
+        # words = words.sort()
+        return words
     except Exception as e:
-        print(e)
-        return {"status": "no data to return"}
-
-    words = []
-    for x in response:
-        tokens = word_tokenize(x.attr_name, language="russian")
-        morph = pymorphy2.MorphAnalyzer()
-
-        for token in tokens:
-            if token.lower() not in words and len(token) != 1:
-                words.append(token.lower())
-            normal_form = morph.parse(token)[0].normal_form
-            if normal_form not in words and len(normal_form) != 1:
-                words.append(normal_form)
-    # words = words.sort()
-    return words
+        return {"error": str(e)}
 
 
 @router.get("/values")
@@ -122,6 +143,7 @@ def read_values(session: Session = Depends(get_db)):
     try:
         return [
             {
+                "id": x.value_id,
                 "value": x.value,
             } for x in session.query(Value).all()
         ]
@@ -135,6 +157,7 @@ def read_main_table(session: Session = Depends(get_db)):
     try:
         return [
             {
+                "id": x.main_id,
                 "doc": x.doc.doc_name,
                 "attr": x.attr.attr_name,
                 "value": x.value.value,
@@ -161,6 +184,51 @@ def read_text_docs_ont(ont_id: int, session: Session = Depends(get_db)):
         return {"status": "no data to return"}
 
 
+@router.post("/registration")
+def registration(login: str, password: str, session: Session = Depends(get_db)):
+    try:
+        if len(login) == 0 or len(password) == 0:
+            return JSONResponse(status_code=500, content={"status": "reg_error",
+                                                          "error": "Пустой логин или пароль"})
+        hash = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
+        hashed = hash.decode('utf8')
+        user_entity = session.query(User).filter(User.login == login).first()
+        if not user_entity:
+            user_entity = User(login=login, password=hashed)
+            session.add(user_entity)
+            session.commit()
+            return JSONResponse(status_code=200, content={
+                "status": "ok",
+                "id": user_entity.user_id,
+                })
+        else:
+            return JSONResponse(status_code=500, content={"status": "reg_error",
+                "error": "Пользователь с таким логином уже существует"})
+    except Exception as e:
+        print(e)
+        return JSONResponse(status_code=400, content={"status": "error", "error": str(e)})
+
+
+@router.post("/auth")
+def auth(login: str, password: str, session: Session = Depends(get_db)):
+    try:
+        if len(login) == 0 or len(password) == 0:
+            return JSONResponse(status_code=500, content={"status": "auth_error",
+                                                          "error": "Пустой логин или пароль"})
+        user = session.query(User).filter(User.login == login).first()
+        if bcrypt.checkpw(password.encode('utf8'), user.password.encode('utf8')):
+            return JSONResponse(status_code=200, content={
+                "status": "ok",
+                "id": user.user_id,
+            })
+        else:
+            return JSONResponse(status_code=500, content={"status": "auth_error",
+                                                          "error": "Неправильный пароль!"})
+    except Exception as e:
+        print(e)
+        return JSONResponse(status_code=400, content={"status": "error", "error": str(e)})
+
+
 @router.get("/maintable/{doc_id}")
 def read_main_table_doc(doc_id: int, session: Session = Depends(get_db)):
     try:
@@ -178,47 +246,48 @@ def read_main_table_doc(doc_id: int, session: Session = Depends(get_db)):
 
 
 @router.post("/uploadont")
-async def upload_ontology(file: UploadFile | None = None, session: Session = Depends(get_db)):
-    if not file:
-        return {"message": "No upload file sent"}
-
-    # нужно загрузить онтологию, а затем ее узлы
-    json_data = json.load(file.file)
-    result = parser.FindMetaAttr(json_data)
-
-    if result[0] == '500':
-        return JSONResponse(status_code=500, content="Error in ontology")
-
-    new_ont = Ontology(ont_name=file.filename, ont_owner=user_id, attr_entity_name=result[1], attr_date=result[2])
-
+async def upload_ontology(user_id: int, file: UploadFile | None = None, session: Session = Depends(get_db)):
     try:
-        count = session.query(Ontology).filter(Ontology.ont_name == file.filename,
-                                               Ontology.ont_owner == user_id).count()
-        if count == 0:
-            session.add(new_ont)
-            session.commit()
-        ont_id = session.query(Ontology).filter(Ontology.ont_name == file.filename,
-                                                Ontology.ont_owner == user_id).first().ont_id
-    except Exception as e:
-        print(e)
-        return JSONResponse(status_code=400, content="Error")
+        if not file:
+            return {"message": "No upload file sent"}
 
-    for x in json_data['nodes']:
-        new_attr = Attribute(attr_name=x['name'], attr_ont=ont_id)
+        # нужно загрузить онтологию, а затем ее узлы
+        json_data = json.load(file.file)
+        result = parser.FindMetaAttr(json_data)
+
+        if result[0] == '500':
+            return JSONResponse(status_code=500, content="Error in ontology")
+
         try:
-            if session.query(Attribute).filter(Attribute.attr_name == new_attr.attr_name,
-                                               Attribute.attr_ont == new_attr.attr_ont).count() == 0:
-                session.add(new_attr)
+            ontology_entity = session.query(Ontology).filter(Ontology.ont_name == file.filename,
+                                                   Ontology.ont_owner == user_id).first()
+            if not ontology_entity:
+                ontology_entity = Ontology(ont_name=file.filename, ont_owner=user_id, attr_entity_name=result[1],
+                                   attr_date=result[2])
+                session.add(ontology_entity)
                 session.commit()
+            ont_id = ontology_entity.ont_id
         except Exception as e:
             print(e)
-            return JSONResponse(status_code=400, content="Error")
-    return JSONResponse(status_code=200, content={
-        "id": ont_id,
-        "attributes": [{
-            "name": x['name'],
-        } for x in json_data['nodes']
-        ]})
+            return JSONResponse(status_code=400, content={"error": str(e)})
+        for x in json_data['nodes']:
+            new_attr = Attribute(attr_name=x['name'], attr_ont=ont_id)
+            try:
+                if session.query(Attribute).filter(Attribute.attr_name == new_attr.attr_name,
+                                                   Attribute.attr_ont == new_attr.attr_ont).count() == 0:
+                    session.add(new_attr)
+                    session.commit()
+            except Exception as e:
+                print(e)
+                return JSONResponse(status_code=400, content={"error": str(e)})
+        return JSONResponse(status_code=200, content={
+            "id": ont_id,
+            "attributes": [{
+                "name": x['name'],
+            } for x in json_data['nodes']
+            ]})
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @router.post("/uploaddoc/{ont_id}")
@@ -311,17 +380,7 @@ async def delete_data(session: Session = Depends(get_db)):
         for x in session.query(Value).all():
             session.delete(x)
             session.commit()
-    except Exception as e:
-        print(e)
-        return JSONResponse(status_code=400, content="Error")
-    return "ok"
-
-
-@router.delete("/deleteont/{ont_id}")
-async def delete_ont(ont_id: int, session: Session = Depends(get_db)):
-    try:
-        x = session.query(Ontology).filter(Ontology.ont_id == ont_id).first()
-        if x:
+        for x in session.query(User).all():
             session.delete(x)
             session.commit()
     except Exception as e:
@@ -330,11 +389,11 @@ async def delete_ont(ont_id: int, session: Session = Depends(get_db)):
     return "ok"
 
 
-@router.delete("/deletedocs/{ont_id}")
-async def delete_docs(ont_id: int, session: Session = Depends(get_db)):
+@router.delete("/deletedatauser")
+async def delete_data_user(user_id: int, session: Session = Depends(get_db)):
     try:
-        ont = session.query(Ontology).filter(Ontology.ont_id == ont_id).first()
-        for x in session.query(TextDoc).filter(TextDoc.ont == ont).all():
+        xx = session.query(Ontology).filter(Ontology.ont_owner == user_id).all()
+        for x in xx:
             session.delete(x)
             session.commit()
     except Exception as e:
@@ -529,20 +588,3 @@ def read_question(ont_id: int, question: str, session: Session = Depends(get_db)
         ]
 
     return []
-
-
-"""@router.get("/maintable/{doc_name}/{attr_name}")
-def read_item(doc_name: str, attr_name: str, session: Session = Depends(get_db)):
-    doc_id = session.query(TextDoc).filter(TextDoc.doc_name == doc_name,
-                                           TextDoc.doc_ont == user_ont).first().doc_id
-    attr_id = session.query(Attribute).filter(Attribute.attr_name == attr_name,
-                                              Attribute.attr_ont == user_ont).first().attr_id
-    result = session.query(MainTable).filter(MainTable.main_doc == doc_id,
-                                             MainTable.main_attr == attr_id).all()
-    return [
-        {
-            "doc": x.doc.doc_name,
-            "attr": x.attr.attr_name,
-            "value": x.value.value,
-        } for x in result
-    ]"""
