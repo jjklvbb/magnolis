@@ -104,7 +104,7 @@ function Tabs() {
   const [value, setValue] = useState('');
   const [lastValue, setLastValue] = useState(' ');
 
-  useEffect(() => {
+  /*useEffect(() => {
     async function getWords(e) {
       try {
         if (localStorage.getItem("user_ont")) {
@@ -130,7 +130,7 @@ function Tabs() {
       }
     }
     getWords();
-  }, [name])
+  }, [name])*/
 
   const filteredWords = words.filter(word => { return word.toLowerCase().includes(lastValue.toLowerCase()); })
   //console.log(filt.map(word => {return value + ' ' + word}));

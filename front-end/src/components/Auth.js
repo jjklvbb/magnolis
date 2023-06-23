@@ -34,6 +34,8 @@ export default function Auth() {
                         let id = response.data['id'];
                         console.log(id);
                         localStorage.setItem("user_id", id.toString());
+                        localStorage.removeItem("user_ont_name")
+                        localStorage.removeItem("user_ont")
                         navigate("/main");
                     }
                 })
@@ -73,6 +75,8 @@ export default function Auth() {
                         let id = response.data['id'];
                         console.log(id);
                         localStorage.setItem("user_id", id.toString());
+                        localStorage.removeItem("user_ont_name")
+                        localStorage.removeItem("user_ont")
                         navigate("/main");
                     }
                 })
@@ -89,6 +93,9 @@ export default function Auth() {
 
     return (
         <div className='auth-container'>
+            <h2>
+                Добро пожаловать в MagNolis!
+            </h2><br/>
             <input ref={loginRef} type="text" className="auth-input" placeholder='Введите логин' /><br />
             <input ref={passwordRef} type="password" className="auth-input" placeholder='Введите пароль' /><br />
             <button onClick={registrationHandle} className="auth-button">Зарегестрироваться</button>

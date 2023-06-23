@@ -70,8 +70,8 @@ export const UploadFile = ({setResult, setSelected}) =>{
         <>
            <form  onSubmit={handleSubmit}>
                 <input className='upload-file-btn' type="file" onChange={handleChange} multiple/>
-                <button className='upload-file-submit' type="submit">Загрузить</button>
-                <button className='delete-docs' onClick={deleteDocs} >Удалить документы</button>
+                <button className='upload-file-submit' type="button" onClick={handleSubmit}>Загрузить</button>
+                <button className='delete-docs' onClick={deleteDocs} type='button'>Удалить документы</button>
             </form>
         </>
     )

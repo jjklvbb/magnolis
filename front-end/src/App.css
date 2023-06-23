@@ -297,14 +297,25 @@ th {
 }
 
 .auth-input, .auth-button{
+  width: 200px;
   padding: 10px;
-  margin: 10px;
-  box-shadow: 3px 3px 10px 6px #e7d5f9;
-  text-align: center;
-  justify-content: center;
+  margin: 20px;
+  margin-top: 10px;
+  box-shadow: 3px 3px 10px 6px rgba(255, 255, 255, 0.966);
   align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  background:rgb(255, 255, 255);
+  border: 1px solid rgb(0, 0, 0);
+  border-radius: 5px;
+  font-size: medium;
 }
 
+.auth-button:hover {
+  background: #fbc6ff;
+  cursor: pointer;
+  transition: cubic-bezier(1, 0, 0, 1) .5s all;
+}
 
 .ont-dropdown{
   width: 300px;

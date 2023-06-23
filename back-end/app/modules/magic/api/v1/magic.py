@@ -26,7 +26,7 @@ def get_hello():
         return [{"value": "hello world"}, {"value": "helloworld2"}]
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=404, content="No data to return")
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/users")
@@ -42,7 +42,7 @@ def read_users(session: Session = Depends(get_db)):
         return JSONResponse(status_code=200, content=content)
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=404, content="No data to return")
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/ontologies")
@@ -60,7 +60,7 @@ def read_ontologies(session: Session = Depends(get_db)):
         return JSONResponse(status_code=200, content=content)
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=400, content="No data to return")
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/user_ontologies")
@@ -93,7 +93,7 @@ def read_text_docs(session: Session = Depends(get_db)):
         ]
     except Exception as e:
         print(e)
-        return {"status": "no data to return"}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/attributes")
@@ -108,7 +108,7 @@ def read_attributes(session: Session = Depends(get_db)):
         ]
     except Exception as e:
         print(e)
-        return {"status": "no data to return"}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/get_words/{ont_id}")
@@ -119,7 +119,7 @@ def get_words(ont_id: int, session: Session = Depends(get_db)):
             response = session.query(Attribute).filter(Attribute.attr_ont == ont_id).all()
         except Exception as e:
             print(e)
-            return {"status": "no data to return"}
+            return {"error": str(e)}
 
         words = []
         for x in response:
@@ -149,7 +149,7 @@ def read_values(session: Session = Depends(get_db)):
         ]
     except Exception as e:
         print(e)
-        return {"status": "no data to return"}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/maintable")
@@ -165,7 +165,7 @@ def read_main_table(session: Session = Depends(get_db)):
         ]
     except Exception as e:
         print(e)
-        return {"status": "no data to return"}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.get("/textdocs/{ont_id}")
@@ -181,7 +181,7 @@ def read_text_docs_ont(ont_id: int, session: Session = Depends(get_db)):
         ]
     except Exception as e:
         print(e)
-        return {"status": "no data to return"}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.post("/registration")
@@ -214,8 +214,11 @@ def auth(login: str, password: str, session: Session = Depends(get_db)):
     try:
         if len(login) == 0 or len(password) == 0:
             return JSONResponse(status_code=500, content={"status": "auth_error",
-                                                          "error": "Пустой логин или пароль"})
+                                                          "error": "Пустой логин или пароль."})
         user = session.query(User).filter(User.login == login).first()
+        if not user:
+            return JSONResponse(status_code=500, content={"status": "auth_error",
+                                                          "error": "Пользователя с таким логином не существует."})
         if bcrypt.checkpw(password.encode('utf8'), user.password.encode('utf8')):
             return JSONResponse(status_code=200, content={
                 "status": "ok",
@@ -242,7 +245,7 @@ def read_main_table_doc(doc_id: int, session: Session = Depends(get_db)):
         ]
     except Exception as e:
         print(e)
-        return {"status": "no data to return"}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.post("/uploadont")
@@ -287,7 +290,7 @@ async def upload_ontology(user_id: int, file: UploadFile | None = None, session:
             } for x in json_data['nodes']
             ]})
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 @router.post("/uploaddoc/{ont_id}")
@@ -314,7 +317,7 @@ async def upload_text_document(ont_id: int, file: UploadFile | None = None, sess
         attributes = session.query(Attribute).filter(Attribute.attr_ont == ont_id).all()  # все атрибуты
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=400, content="Error")
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
     result = parser.TextParsing(doc_id, text, attributes)  # [doc_id, attr_id, value]
     # print("Результат парсинга:", result)
@@ -342,7 +345,7 @@ async def upload_text_document(ont_id: int, file: UploadFile | None = None, sess
                 session.commit()
         except Exception as e:
             print(e)
-            return JSONResponse(status_code=400, content="Error")
+            return JSONResponse(status_code=400, content={"error": str(e)})
 
     # добавление в главную таблицу
     for x in result:
@@ -356,7 +359,7 @@ async def upload_text_document(ont_id: int, file: UploadFile | None = None, sess
                 session.commit()
         except Exception as e:
             print(e)
-            return JSONResponse(status_code=400, content="Error")
+            return JSONResponse(status_code=400, content={"error": str(e)})
 
     return text
 
@@ -385,7 +388,7 @@ async def delete_data(session: Session = Depends(get_db)):
             session.commit()
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=400, content="Error")
+        return JSONResponse(status_code=400, content={"error": str(e)})
     return "ok"
 
 
@@ -398,7 +401,20 @@ async def delete_data_user(user_id: int, session: Session = Depends(get_db)):
             session.commit()
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=400, content="Error")
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    return "ok"
+
+
+@router.delete("/deletedocs/{ont_id}")
+async def delete_docs(ont_id: int, session: Session = Depends(get_db)):
+    try:
+        ont = session.query(Ontology).filter(Ontology.ont_id == ont_id).first()
+        for x in session.query(TextDoc).filter(TextDoc.ont == ont).all():
+            session.delete(x)
+            session.commit()
+    except Exception as e:
+        print(e)
+        return JSONResponse(status_code=400, content={"error": str(e)})
     return "ok"
 
 
@@ -433,7 +449,7 @@ def read_question(ont_id: int, question: str, session: Session = Depends(get_db)
         attributes = session.query(Attribute).filter(Attribute.attr_ont == ont_id).all()
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=400, content="Error")
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
     nltk.download('punkt')
     nltk.download('stopwords')
@@ -447,6 +463,18 @@ def read_question(ont_id: int, question: str, session: Session = Depends(get_db)
     inters_dic_w_attr = {}  # {attr_id, кол-во совпадений с атрибутом}
     for attr in attributes:
         attr_lemm = text_preprocessing(attr.attr_name)
+        if "подразделение" in attr_lemm:
+            dop_lemm = ["производство", "команда", "отдел", "отделение", "сектор", "департамент", "звено", "филиал"]
+            attr_lemm += dop_lemm
+        if "должность" in attr_lemm:
+            dop_lemm = ["работа", "положение", "пост", "позиция"]
+            attr_lemm += dop_lemm
+        if "специальность" in attr_lemm:
+            dop_lemm = ["профессия", "профиль", "квалификация", "ремесло"]
+            attr_lemm += dop_lemm
+        if "фамилия" in attr_lemm:
+            dop_lemm = ["фио"]
+            attr_lemm += dop_lemm
         word_intersection = list(set(quest_lemm) & set(attr_lemm))
         inters_dic_w_attr[attr.attr_id] = len(word_intersection)
         # print(attrNormal, len(word_intersection))
@@ -561,7 +589,7 @@ def read_question(ont_id: int, question: str, session: Session = Depends(get_db)
                 non_filt_result += find_data
             except Exception as e:
                 print(e)
-                return JSONResponse(status_code=400, content="Error")
+                return JSONResponse(status_code=400, content={"error": str(e)})
 
         for data in non_filt_result:
             if type == 1 or type == 2 or type == 4:
